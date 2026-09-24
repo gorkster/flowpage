@@ -39,17 +39,33 @@ export class WatershedMap {
       minZoom: 7
     });
 
-    // Clean modern vector-like raster tiles (CartoDB Positron / OSM)
-    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    const tileUrl = isDark
-      ? 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'
-      : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+    // 100% Free basemaps requiring NO API key or token:
+    const osmLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors'
+    });
 
-    L.tileLayer(tileUrl, {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>',
-      subdomains: 'abcd',
-      maxZoom: 19
-    }).addTo(this.map);
+    const usgsTopoLayer = L.tileLayer('https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 16,
+      attribution: 'USGS National Map &copy; <a href="https://www.usgs.gov/" target="_blank" rel="noopener">U.S. Geological Survey</a>'
+    });
+
+    const esriTopoLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 18,
+      attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, TomTom, Intermap, iPC, USGS, FAO, NPS, NRCAN, GeoBase, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), and the GIS User Community'
+    });
+
+    // Default to OpenStreetMap (fast, clean, and reliable worldwide)
+    osmLayer.addTo(this.map);
+
+    // Add layer control so user can toggle between free maps (OSM, USGS Topo, Terrain)
+    const baseMaps = {
+      'OpenStreetMap': osmLayer,
+      'USGS Topo (National Map)': usgsTopoLayer,
+      'Esri Terrain Topo': esriTopoLayer
+    };
+
+    L.control.layers(baseMaps, null, { position: 'topright' }).addTo(this.map);
 
     this.drawRiverBranches();
     this.updateMarkers(stations);
